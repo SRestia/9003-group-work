@@ -1,0 +1,134 @@
+import java.util.ArrayList;
+
+abstract class Vehicle {
+    protected String vehicleID;
+    private int velocity;//velocity should be a constant for each type of vehicles
+    protected int currentLane;//Store which lane the vehicle currently is
+    protected int distance = 0;//distance = distance + (velocity * moveTime)
+    protected int moveCount = 0;//The times of calling move() method
+    protected int moveTime = 5;//The time every move() takes
+    protected static final int[] lanes = {1, 2, 3};
+    protected int laneIndex = moveCount % lanes.length;//To ensure every vehicle moves in lane 1 -> 2 -> 3 -> 1 -> ...
+    // To store the index of lane and the times of calling move() method separately
+
+    //Instructor of Vehicle
+    public Vehicle (String vehicleID) {
+        this.vehicleID = vehicleID;
+        //Initial lane of each vehicle is lane 1
+        this.currentLane = lanes[laneIndex];
+    }
+    //Getter and setter for vehicleID
+    public String getVehicleID () { return vehicleID; }
+    public void setVehicleID (String vehicleID) { this.vehicleID = vehicleID; }
+
+    //move() method
+    public void move() {
+        moveTime ++;
+        //Error handling for preventing invalid lane transition
+        try {
+            if (laneIndex >= 0 && laneIndex < lanes.length) {
+                currentLane = lanes[laneIndex];
+                calculateDistance();
+            }
+        } catch (RuntimeException e) {
+            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+        }
+    }
+
+    //calculateDistance() method to calculate distance
+    public int calculateDistance() {
+        distance = distance + (velocity * moveTime);
+        return distance;
+    }
+
+    public void showTrafficState() {
+        System.out.println("Vehicle: " + vehicleID + ": ");
+        System.out.println("Current Lane: " + currentLane);
+        System.out.println("Distance: " + distance);
+        System.out.println("");
+    }
+}
+
+class Car extends Vehicle {
+    private int velocity;
+    public Car (String signalID) {
+        super(signalID);
+    }
+
+    @Override
+    public int calculateDistance() {
+        velocity = 100;
+        return super.calculateDistance();
+    }
+
+    @Override
+    public void move() {
+        moveTime ++;
+        //Error handling for preventing invalid lane transition
+        try {
+            if (laneIndex >= 0 && laneIndex < lanes.length) {
+                currentLane = lanes[laneIndex];
+                calculateDistance();
+                System.out.println("Car: " + vehicleID + ": Has successfully moved to " + currentLane + ".");
+            }
+        } catch (RuntimeException e) {
+            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+        }
+    }
+}
+
+class Bus extends Vehicle {
+    private int velocity;
+    public Bus (String signalID) {
+        super(signalID);
+    }
+
+    @Override
+    public int calculateDistance() {
+        velocity = 80;
+        return super.calculateDistance();
+    }
+
+    @Override
+    public void move() {
+        moveTime ++;
+        //Error handling for preventing invalid lane transition
+        try {
+            if (laneIndex >= 0 && laneIndex < lanes.length) {
+                currentLane = lanes[laneIndex];
+                calculateDistance();
+                System.out.println("Bus: " + vehicleID + ": Has successfully moved to " + currentLane + ".");
+            }
+        } catch (RuntimeException e) {
+            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+        }
+    }
+}
+
+class Truck extends Vehicle {
+    private int velocity;
+    public Truck (String signalID) {
+        super(signalID);
+    }
+
+    @Override
+    public int calculateDistance() {
+        velocity = 90;
+        return super.calculateDistance();
+    }
+
+    @Override
+    public void move() {
+        moveTime ++;
+        //Error handling for preventing invalid lane transition
+        try {
+            if (laneIndex >= 0 && laneIndex < lanes.length) {
+                currentLane = lanes[laneIndex];
+                calculateDistance();
+                System.out.println("Truck: " + vehicleID + ": Has successfully moved to " + currentLane + ".");
+            }
+        } catch (RuntimeException e) {
+            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+        }
+    }
+}
