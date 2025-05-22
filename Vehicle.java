@@ -1,134 +1,190 @@
-import java.util.ArrayList;
+public abstract class Vehicle {
+    protected String vehicleId;
+    protected double velocity;
+    protected int[] lanes;
+    protected double currentPosition;
+    protected double speedPerMoveTime;
+    protected int currentLaneIndex;
+    protected double moveTime;
 
-abstract class Vehicle {
-    protected String vehicleID;
-    private int velocity;//velocity should be a constant for each type of vehicles
-    protected int currentLane;//Store which lane the vehicle currently is
-    protected int distance = 0;//distance = distance + (velocity * moveTime)
-    protected int moveCount = 0;//The times of calling move() method
-    protected int moveTime = 5;//The time every move() takes
-    protected static final int[] lanes = {1, 2, 3};
-    protected int laneIndex = moveCount % lanes.length;//To ensure every vehicle moves in lane 1 -> 2 -> 3 -> 1 -> ...
-    // To store the index of lane and the times of calling move() method separately
-
-    //Instructor of Vehicle
-    public Vehicle (String vehicleID) {
-        this.vehicleID = vehicleID;
-        //Initial lane of each vehicle is lane 1
-        this.currentLane = lanes[laneIndex];
+    // Constructor 
+    public Vehicle(String vehicleId, double speedPerMoveTime){
+        this.vehicleId = vehicleId;
+        this.velocity = 0.0;
+        this.lanes  = new int[]{1,2,3};
+        this.currentPosition = 0.0;
+        this.speedPerMoveTime = speedPerMoveTime;
+        this.currentLaneIndex = 0;
+        this.moveTime = 5.0;
     }
-    //Getter and setter for vehicleID
-    public String getVehicleID () { return vehicleID; }
-    public void setVehicleID (String vehicleID) { this.vehicleID = vehicleID; }
 
-    //move() method
-    public void move() {
-        moveTime ++;
-        //Error handling for preventing invalid lane transition
-        try {
-            if (laneIndex >= 0 && laneIndex < lanes.length) {
-                currentLane = lanes[laneIndex];
-                calculateDistance();
-            }
-        } catch (RuntimeException e) {
-            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+    // Getters
+    protected int getLane(){
+        return  this.lanes[currentLaneIndex];
+    }
+    protected String getVehicleId(){
+        return this.vehicleId;
+    }
+
+    protected double getVelocity(){
+        return this.velocity;
+    }
+
+    protected double getCurrentPosition(){
+        return this.currentPosition;    
+    }
+
+    // setters
+    protected void setVelocity(double newVelocity) {
+        this.velocity = newVelocity;
+    }
+
+    protected void setPosition(double newPosition){
+        this.currentPosition = newPosition;
+    }
+
+    // Calculate methods
+
+    protected double calculateVelocity(){
+        return speedPerMoveTime/ moveTime;
+    }
+
+    protected void changeLane() throws SimulationException{
+        switch (currentLaneIndex) {
+            case 0:
+                currentLaneIndex = 1;
+                break;
+            case 1:
+                currentLaneIndex = 2;
+                break;
+            case 2:
+                currentLaneIndex = 0;
+                break;
+            
+            default:
+                // error handling for incorrect lane 
+                throw new SimulationException("Invalid lane Index (not from 0-2): " + currentLaneIndex ); 
         }
     }
 
-    //calculateDistance() method to calculate distance
-    public int calculateDistance() {
-        distance = distance + (velocity * moveTime);
-        return distance;
+    public abstract void move() throws SimulationException;
+
+    public void showTrafficState(){
+        System.out.printf("Traffic State: Vehicle Id = %s | Lane = %d | Velocity = %.2f m/s | Position = %.2f\n", getVehicleId(), getLane(), getVelocity(), getCurrentPosition());
     }
 
-    public void showTrafficState() {
-        System.out.println("Vehicle: " + vehicleID + ": ");
-        System.out.println("Current Lane: " + currentLane);
-        System.out.println("Distance: " + distance);
-        System.out.println("");
-    }
-}
+    public static void main(String[] args) {
+        try {
+            Car car = new Car("C001");
+            Bus bus = new Bus("B001");
+            Truck truck = new Truck("T001");
+            for (int i = 0; i < 5; i++){
+                System.out.println("TIME " + Integer.toString(i));
+                car.move();
+                bus.move();
+                truck.move();
+                System.out.println();
+                System.out.println();
 
+            }
+            System.out.println("Traffic State");
+            car.showTrafficState();
+            bus.showTrafficState();
+            truck.showTrafficState();
+            
+
+        } catch (SimulationException e) {
+            System.err.println("Simulation error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+}   
+
+// Subclass Car
 class Car extends Vehicle {
-    private int velocity;
-    public Car (String signalID) {
-        super(signalID);
+
+    public Car(String vehicleId){
+        super(vehicleId, 100.0 );
     }
 
     @Override
-    public int calculateDistance() {
-        velocity = 100;
-        return super.calculateDistance();
-    }
-
-    @Override
-    public void move() {
-        moveTime ++;
-        //Error handling for preventing invalid lane transition
+    public void move() throws SimulationException {
         try {
-            if (laneIndex >= 0 && laneIndex < lanes.length) {
-                currentLane = lanes[laneIndex];
-                calculateDistance();
-                System.out.println("Car: " + vehicleID + ": Has successfully moved to " + currentLane + ".");
-            }
-        } catch (RuntimeException e) {
-            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+            // change the lane 
+            changeLane();
+
+            // calculte velocity
+            setVelocity(calculateVelocity());
+            
+            // update the distance
+            setPosition(getCurrentPosition() + getVelocity() * moveTime);
+            
+            // print the result info
+            System.out.println("ACTION: CAR MOVED");
+            showTrafficState();
+            System.out.println("#############");
+        } catch (Exception e) {
+            throw new SimulationException("Move Error: ", e);
         }
     }
 }
 
+
+// Subclass Bus
 class Bus extends Vehicle {
-    private int velocity;
-    public Bus (String signalID) {
-        super(signalID);
+
+    public Bus(String vehicleId){
+        super(vehicleId, 80.0 );
     }
 
     @Override
-    public int calculateDistance() {
-        velocity = 80;
-        return super.calculateDistance();
-    }
-
-    @Override
-    public void move() {
-        moveTime ++;
-        //Error handling for preventing invalid lane transition
+    public void move() throws SimulationException {
         try {
-            if (laneIndex >= 0 && laneIndex < lanes.length) {
-                currentLane = lanes[laneIndex];
-                calculateDistance();
-                System.out.println("Bus: " + vehicleID + ": Has successfully moved to " + currentLane + ".");
-            }
-        } catch (RuntimeException e) {
-            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+            // change the lane 
+            changeLane();
+
+            // calculte velocity
+            setVelocity(calculateVelocity());
+            
+            // update the distance
+            setPosition(getCurrentPosition() + getVelocity() * moveTime);
+            
+            // print the result info
+            System.out.println("ACTION: BUS MOVED");
+            showTrafficState();
+            System.out.println("#############");
+        } catch (Exception e) {
+            throw new SimulationException("Move Error: ", e);
         }
     }
 }
 
+// Subclass Truck
 class Truck extends Vehicle {
-    private int velocity;
-    public Truck (String signalID) {
-        super(signalID);
+
+    public Truck(String vehicleId){
+        super(vehicleId, 90.0 );
     }
 
     @Override
-    public int calculateDistance() {
-        velocity = 90;
-        return super.calculateDistance();
-    }
-
-    @Override
-    public void move() {
-        moveTime ++;
-        //Error handling for preventing invalid lane transition
+    public void move() throws SimulationException {
         try {
-            if (laneIndex >= 0 && laneIndex < lanes.length) {
-                currentLane = lanes[laneIndex];
-                calculateDistance();
-                System.out.println("Truck: " + vehicleID + ": Has successfully moved to " + currentLane + ".");
-            }
-        } catch (RuntimeException e) {
-            System.out.println("Vehicle " + vehicleID + ": Invalid lane transition.");
+            // change the lane 
+            changeLane();
+
+            // calculte velocity
+            setVelocity(calculateVelocity());
+            
+            // update the distance
+            setPosition(getCurrentPosition() + getVelocity() * moveTime);
+            
+            // print the result info
+            System.out.println("ACTION: TRUCK MOVED");
+            showTrafficState();
+            System.out.println("#############");
+        } catch (Exception e) {
+            throw new SimulationException("Move Error: ", e);
         }
     }
 }
