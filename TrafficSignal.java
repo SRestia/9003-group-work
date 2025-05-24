@@ -1,42 +1,36 @@
-import java.util.ArrayList;
+class TrafficSignal {
+    private int redDuration = 10;
+    private int yellowDuration = 2;
+    private int greenDuration = 15;
+    private int timer = 0;
+    private String currentState = "red";//Assume all traffic signals begin from "red"
 
-public class TrafficSignal {
-    private int signalID;
-    private String currentState;
-    private int currentTimer;
-    private static final String[] states = {"red", "yellow", "green"};
-    private static int[] timers = {10, 2, 15};
-    private int signalCount = -1;//callTime to store the time of calling signal()
-
-    //Getter and setter for signalID
-    public TrafficSignal(int signalID) {
-        this.signalID = signalID;
-    }
-    public int getSignalID() {
-        return signalID;
-    }
-    public void setSignalID(int signalID) { this.signalID = signalID; }
-
-    //Method Signal() to cycle through signal states
-    public void signal() {
-        signalCount++;
-        //Try-catch statement to handel errors
-        try {
-            //Ensure the time of calling signal() is between 1 to 3 for each object
-            if (signalCount > 0 && signalCount < states.length) {
-                currentState = states[signalCount];
-                currentTimer = timers[signalCount];
-                System.out.println("The signal state has changed to " + states[signalCount] + ".");
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            currentState = null;
-            currentTimer = 0;
-            System.out.println(signalID + ": Invalid signal transition.");
+    public void update(int seconds) {
+        timer += seconds;//Track the time
+        int cycle = redDuration +yellowDuration +greenDuration;//The duration of one cycle of traffic signal operation
+        int timeInCycle = timer % cycle;//Calculate which moment it is in a traffic signal operation cycle
+        //ELSE-IF statement to judge the current state of traffic signal
+        if (timeInCycle < redDuration) {
+            currentState = "red";
+        } else if (timeInCycle < redDuration+ yellowDuration) {
+            currentState = "yellow";
+        } else {
+            currentState = "green";
         }
     }
 
-    public void showTrafficSignal() {
-        System.out.println(signalID + ": " + currentState);
+    public void setDuration(int red, int yellow, int green) {
+        redDuration = red;
+        yellowDuration = yellow;
+        greenDuration = green;
     }
 
+    //Get which state the signals are at: red, yellow or green
+    public String getCurrentState() {
+        return currentState;
+    }
+
+    public String showTrafficSignal() {
+        return "Current State: " + currentState + " | Red Duration: " + redDuration + " | Yellow Duration: " + yellowDuration + " | Green Duration: " + greenDuration;
+    }
 }

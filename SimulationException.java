@@ -1,8 +1,6 @@
-public class SimulationException extends Exception {
+//Create custom exceptions: SimulationException
+class SimulationException extends Exception {
     public SimulationException(String message) {
         super(message);
-    }
-    public SimulationException(String message, Throwable cause) {
-        super(message, cause);
     }
 }

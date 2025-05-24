@@ -1,190 +1,118 @@
 public abstract class Vehicle {
-    protected String vehicleId;
-    protected double velocity;
-    protected int[] lanes;
-    protected double currentPosition;
-    protected double speedPerMoveTime;
-    protected int currentLaneIndex;
-    protected double moveTime;
+    protected String vehicleID;
+    protected int velocity;
+    protected int currentLane;
+    protected int currentPosition;
+    protected int moveLaneCount;//Track the times of calling move() method
+    protected static final int MAX_MOVE_LANE_COUNT = 5;
+    protected boolean moveThroughIntersection = false;
+    protected boolean defaultOrder = true;
 
-    // Constructor 
-    public Vehicle(String vehicleId, double speedPerMoveTime){
-        this.vehicleId = vehicleId;
-        this.velocity = 0.0;
-        this.lanes  = new int[]{1,2,3};
-        this.currentPosition = 0.0;
-        this.speedPerMoveTime = speedPerMoveTime;
-        this.currentLaneIndex = 0;
-        this.moveTime = 5.0;
+
+    public Vehicle(String vehicleID, int currentLane, boolean defaultOrder) {
+        this.vehicleID = vehicleID;
+        this.currentLane = currentLane;
+        this.defaultOrder = defaultOrder;
+        this.currentPosition = 0;
+        this.moveLaneCount = 0;
+        setVelocity();
     }
 
-    // Getters
-    protected int getLane(){
-        return  this.lanes[currentLaneIndex];
-    }
-    protected String getVehicleId(){
-        return this.vehicleId;
-    }
+    public abstract void setVelocity();
 
-    protected double getVelocity(){
-        return this.velocity;
+    //move() method to make vehicle change lanes by the default order of 1->2->3->1->2
+    public void move() {
+        move(defaultOrder);
     }
 
-    protected double getCurrentPosition(){
-        return this.currentPosition;    
-    }
-
-    // setters
-    protected void setVelocity(double newVelocity) {
-        this.velocity = newVelocity;
-    }
-
-    protected void setPosition(double newPosition){
-        this.currentPosition = newPosition;
-    }
-
-    // Calculate methods
-
-    protected double calculateVelocity(){
-        return speedPerMoveTime/ moveTime;
-    }
-
-    protected void changeLane() throws SimulationException{
-        switch (currentLaneIndex) {
-            case 0:
-                currentLaneIndex = 1;
-                break;
-            case 1:
-                currentLaneIndex = 2;
-                break;
-            case 2:
-                currentLaneIndex = 0;
-                break;
-            
-            default:
-                // error handling for incorrect lane 
-                throw new SimulationException("Invalid lane Index (not from 0-2): " + currentLaneIndex ); 
-        }
-    }
-
-    public abstract void move() throws SimulationException;
-
-    public void showTrafficState(){
-        System.out.printf("Traffic State: Vehicle Id = %s | Lane = %d | Velocity = %.2f m/s | Position = %.2f\n", getVehicleId(), getLane(), getVelocity(), getCurrentPosition());
-    }
-
-    public static void main(String[] args) {
+    //Overloading of move() method
+    public void move(boolean moveLaneDirection) {
         try {
-            Car car = new Car("C001");
-            Bus bus = new Bus("B001");
-            Truck truck = new Truck("T001");
-            for (int i = 0; i < 5; i++){
-                System.out.println("TIME " + Integer.toString(i));
-                car.move();
-                bus.move();
-                truck.move();
-                System.out.println();
-                System.out.println();
-
+            if (moveLaneCount >= MAX_MOVE_LANE_COUNT) {
+                throw new SimulationException("Vehicle " + vehicleID + "has reached the maximum number of changing lanes.");
             }
-            System.out.println("Traffic State");
-            car.showTrafficState();
-            bus.showTrafficState();
-            truck.showTrafficState();
-            
-
+            //Change lanes by default order
+            if (moveLaneDirection) {
+                if (currentLane == 3) {
+                    currentLane = 1;
+                } else {
+                    currentLane++;
+                }
+            } else {//Change lanes by negative order: 3->2->1-3->2
+                if (currentLane == 1) {
+                    currentLane = 3;
+                } else {
+                    currentLane--;
+                }
+            }
+            moveLaneCount++;
+            System.out.println("Vehicle " + vehicleID + "has moved to Lane " + currentLane + ".");
         } catch (SimulationException e) {
-            System.err.println("Simulation error: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("Error while changing lanes: ;" + e.getMessage());
         }
     }
 
-}   
 
-// Subclass Car
+    //Keep updating the position of vehicle when it is not changing lanes and stopping
+    public void moveForward(int time) {
+        try{
+            currentPosition += (velocity * time / 3600);
+        } catch (Exception e) {
+            System.out.println("Vehicle " + vehicleID + ": Error while moving forwared: " + e.getMessage());
+        }
+    }
+
+    //showTrafficState() method to show the current status of vehicle
+    public String showTrafficState() {
+        return this.getClass().getSimpleName() + "Vehicle ID: " + vehicleID + " | Velocity: " + velocity + " | Current Lane: " + currentLane + " | Current Position: " + currentPosition;
+    }
+}
+
+//Subclass Car
 class Car extends Vehicle {
+    public Car(String vehicleID, int currentLane, boolean defaultOrder) {
+        super(vehicleID, currentLane, defaultOrder);
+    }
 
-    public Car(String vehicleId){
-        super(vehicleId, 100.0 );
+    public void setVelocity() {
+        this.velocity = 100;
     }
 
     @Override
-    public void move() throws SimulationException {
-        try {
-            // change the lane 
-            changeLane();
-
-            // calculte velocity
-            setVelocity(calculateVelocity());
-            
-            // update the distance
-            setPosition(getCurrentPosition() + getVelocity() * moveTime);
-            
-            // print the result info
-            System.out.println("ACTION: CAR MOVED");
-            showTrafficState();
-            System.out.println("#############");
-        } catch (Exception e) {
-            throw new SimulationException("Move Error: ", e);
-        }
+    public String showTrafficState() {
+        return "Vehicle Type: Car | " +  super.showTrafficState();
     }
 }
 
-
-// Subclass Bus
+//Subclass Bus
 class Bus extends Vehicle {
+    public Bus(String vehicleID, int currentLane, boolean defaultOrder) {
+        super(vehicleID, currentLane, defaultOrder);
+    }
 
-    public Bus(String vehicleId){
-        super(vehicleId, 80.0 );
+    public void setVelocity() {
+        this.velocity = 80;
     }
 
     @Override
-    public void move() throws SimulationException {
-        try {
-            // change the lane 
-            changeLane();
-
-            // calculte velocity
-            setVelocity(calculateVelocity());
-            
-            // update the distance
-            setPosition(getCurrentPosition() + getVelocity() * moveTime);
-            
-            // print the result info
-            System.out.println("ACTION: BUS MOVED");
-            showTrafficState();
-            System.out.println("#############");
-        } catch (Exception e) {
-            throw new SimulationException("Move Error: ", e);
-        }
+    public String showTrafficState() {
+        return "Vehicle Type: Bus | " + super.showTrafficState();
     }
 }
 
-// Subclass Truck
+//Subclass Truck
 class Truck extends Vehicle {
+    public Truck(String vehicleID, int currentLane, boolean defaultOrder) {
+        super(vehicleID, currentLane, defaultOrder);
+    }
 
-    public Truck(String vehicleId){
-        super(vehicleId, 90.0 );
+    public void setVelocity() {
+        this.velocity = 90;
     }
 
     @Override
-    public void move() throws SimulationException {
-        try {
-            // change the lane 
-            changeLane();
-
-            // calculte velocity
-            setVelocity(calculateVelocity());
-            
-            // update the distance
-            setPosition(getCurrentPosition() + getVelocity() * moveTime);
-            
-            // print the result info
-            System.out.println("ACTION: TRUCK MOVED");
-            showTrafficState();
-            System.out.println("#############");
-        } catch (Exception e) {
-            throw new SimulationException("Move Error: ", e);
-        }
+    public String showTrafficState() {
+        return "Vehicle Type: Truck | " + super.showTrafficState();
     }
 }
+
